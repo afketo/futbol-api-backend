@@ -1,0 +1,16 @@
+POST http://localhost:3001/api/players
+Content-Type: application/json
+
+{
+    "name": "Test",
+    "position": "Test",
+    "birthday": "1992-04-22"
+}
+
+###
+
+POST http://localhost:3001/api/players
+Content-Type: application/json
+
+{
+}
