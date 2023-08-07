@@ -1,1 +1,1 @@
-DELETE http://localhost:3001/api/players/1
+DELETE http://localhost:3001/api/players/64d11c8c8963ad4c80f4f7e4

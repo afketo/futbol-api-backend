@@ -1,73 +1,73 @@
+require('dotenv').config()
+require('./mongo')
+
+const Player = require('./models/Player')
 const express = require('express')
 const cors = require('cors')
-const logger = require('./loggerMiddleware')
+const logger = require('./middleware/loggerMiddleware')
+const notFound = require('./middleware/notFound')
+const handleErrors = require('./middleware/handleErrors')
 const app = express()
+
 
 app.use(cors())
 app.use(express.json())
 app.use(logger)
 
-  
-let players = [
-	{
-		'id': 1,
-		'name': 'Roberto Carlos',
-		'position': 'Defender',
-		'birthday': '1988-04-01'
-	},
-	{ 
-		'id': 2,
-		'name': 'Cristiano Ronaldo', 
-		'position': 'Striker',
-		'birthday': '1999-01-05'
-	}, 
-	{
-		'id': 3,
-		'name': 'Unai Simon',
-		'position': 'Goalkeeper',
-		'birthday': '2002-12-25'
-	},
-	{
-		'id': 4,
-		'name': 'Toni Kross',
-		'position': 'Midfield',
-		'birthday': '1995-07-12'
-	},
-	{
-		'id': 5,
-		'name': 'Ivan Helguera',
-		'position': 'Defender',
-		'birthday': '1988-02-12'
-	},
-	{
-		'id': 6,
-		'name': 'Neymar Jr',
-		'position': 'Striker',
-		'birthday': '1992-04-22'
-	}
-]
+app.use('/static', express.static('images'))
 
 app.get('/', (req, res) => {
 	res.send('<h1>Hello World</h1>')
 })
 
 app.get('/api/players', (req, res) => {
-	res.json(players)
+	Player.find()
+		.then(players => {
+			res.json(players)
+		})
 })
 
-app.get('/api/players/:id', (req, res) => {
-	const id = Number(req.params.id)
-	const player = players.find(player => player.id === id)
+app.get('/api/players/:id', (req, res, next) => {
+	const {id} = req.params
+	// const player = players.find(player => player.id === id)
 
-	player ? res.json(player) : res.status(404).end()
+	Player.findById(id)
+		.then(player => {
+			player
+				? res.json(player)
+				: res.status(404).send({
+					error: 'id not found'
+				})
+		})
+		.catch(next)
 })
 
+app.put('/api/players/:id', (req, res, next) => {
+	const {id} = req.params
+	const player = req.body
 
-app.delete('/api/players/:id', (req, res) => {
-	const id = Number(req.params.id)
-	players = players.filter(player => player.id !== id)
+	const newNoteUpdate = {
+		name: player.name,
+		position: player.position,
+		birthday: player.birthday
+	}
+	
+	Player.findByIdAndUpdate(id, newNoteUpdate, { new: true })
+		.then( result => {
+			res.status(200).json(result)
+		})
+		.catch( next)
+})
 
-	res.status(204).end()
+app.delete('/api/players/:id', (req, res, next) => {
+	const {id} = req.params
+	// players = players.filter(player => player.id !== id)
+
+	Player.findByIdAndDelete(id)
+		.then(() => {
+			res.status(204).end()
+		})
+		.catch(next)
 })
 
 app.post('/api/players', (req, res) => {
@@ -79,28 +79,27 @@ app.post('/api/players', (req, res) => {
 		})
 	}
 
-	const ids = players.map(player => player.id)
-	const maxId = Math.max(...ids)
-
-	const newPlayer = {
-		id: maxId+1,
+	const newPlayer = new Player({
 		name: player.name,
 		position: player.position,
 		birthday: player.birthday
-	}
-
-	players = [...players, newPlayer] // Esto es como hacer un concat para añadir registro al array
-
-	res.status(201).json(newPlayer)
-})
-
-app.use((req, res) => {
-	res.status(404).json({
-		error: 'Not found'
 	})
+
+	newPlayer.save()
+		.then(savedNote => {
+			res.json(savedNote)
+		})
+
+	// players = [...players, newPlayer] // Esto es como hacer un concat para añadir registro al array
+
+	// res.status(201).json(newPlayer)
 })
 
-const PORT = process.env.PORT || 3001
+app.use(handleErrors)
+
+app.use(notFound)
+
+const PORT = process.env.PORT
 app.listen(PORT, () => {
 	console.log('Server running on port ' + PORT)
 })

@@ -1,0 +1,8 @@
+PUT http://localhost:3001/api/players/64d11caca0f2338e131eb6e3
+Content-Type: application/json
+
+{
+    "name": "Jugador 1",
+    "position": "Midfield",
+    "birthday": "1992-04-22"
+}
