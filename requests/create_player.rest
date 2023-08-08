@@ -1,11 +1,11 @@
 POST http://localhost:3001/api/players
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0ZDI5NGJjYjIxOTZkMWRhMWZlNjAxMyIsInVzZXJuYW1lIjoiYWZrZXRvIiwiaWF0IjoxNjkxNTMyNDkzLCJleHAiOjE2OTE2MTg4OTN9.ftDDYiu9fEw3f88UD00wog2Y1KR8eJcu9iTp1w3Ckdk
 
 {
     "name": "Test5",
     "position": "Test5",
-    "birthday": "1992-04-22",
-    "userId": "64d27dd98c3f64002f0cc4ea"
+    "birthday": "1992-04-22"
 }
 
 ###

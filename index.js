@@ -3,12 +3,16 @@ const Sentry = require('@sentry/node')
 require('./mongo')
 const express = require('express')
 const cors = require('cors')
+const app = express()
+
 const logger = require('./middleware/loggerMiddleware')
 const notFound = require('./middleware/notFound')
 const handleErrors = require('./middleware/handleErrors')
-const app = express()
+const getTokenExtractUser = require('./middleware/getTokenExtractUser')
+
 const playersRouter = require('./controllers/players')
 const usersRouter = require('./controllers/users')
+const loginRouter = require('./controllers/login')
 
 Sentry.init({
 	dsn: 'https://235106043e24d9de853e02efe07b6ee0@o4505668371611648.ingest.sentry.io/4505668373250048',
@@ -40,8 +44,9 @@ app.get('/', (req, res) => {
 	res.send('<h1>Hello World</h1>')
 })
 
-app.use('/api/players', playersRouter)
-app.use('/api/users', usersRouter)
+app.use('/api/players', getTokenExtractUser, playersRouter)
+app.use('/api/users', getTokenExtractUser, usersRouter)
+app.use('/api/login', getTokenExtractUser, loginRouter)
 
 app.use(notFound)
 // The error handler must be registered before any other error middleware and after all controllers

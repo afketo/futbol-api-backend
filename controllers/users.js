@@ -36,8 +36,10 @@ usersRouter.post('/', async (req, res) => {
 		.then(savedUser => {
 			res.status(201).json(savedUser)
 		})
-		.catch(error => {
-			res.status(400).json(error)
+		.catch(err => {
+			res.status(400).json({
+				error: err.message
+			})
 		})
 })
 
