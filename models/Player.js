@@ -3,7 +3,11 @@ const { Schema, model } = require('mongoose')
 const playerSchema = new Schema({
 	name: String,
 	position: String,
-	birthday: Date
+	birthday: Date,
+	user: {
+		type: Schema.Types.ObjectId,
+		ref: 'User'
+	}
 })
 
 playerSchema.set('toJSON', {

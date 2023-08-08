@@ -1,14 +1,34 @@
 require('dotenv').config()
+const Sentry = require('@sentry/node')
 require('./mongo')
-
-const Player = require('./models/Player')
 const express = require('express')
 const cors = require('cors')
 const logger = require('./middleware/loggerMiddleware')
 const notFound = require('./middleware/notFound')
 const handleErrors = require('./middleware/handleErrors')
 const app = express()
+const playersRouter = require('./controllers/players')
+const usersRouter = require('./controllers/users')
 
+Sentry.init({
+	dsn: 'https://235106043e24d9de853e02efe07b6ee0@o4505668371611648.ingest.sentry.io/4505668373250048',
+	integrations: [
+	// enable HTTP calls tracing
+		new Sentry.Integrations.Http({
+			tracing: true
+		}),
+		// enable Express.js middleware tracing
+		new Sentry.Integrations.Express({
+			app
+		}),
+	],
+	// Performance Monitoring
+	tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!,
+})
+
+// Trace incoming requests
+app.use(Sentry.Handlers.requestHandler())
+app.use(Sentry.Handlers.tracingHandler())
 
 app.use(cors())
 app.use(express.json())
@@ -20,86 +40,17 @@ app.get('/', (req, res) => {
 	res.send('<h1>Hello World</h1>')
 })
 
-app.get('/api/players', (req, res) => {
-	Player.find()
-		.then(players => {
-			res.json(players)
-		})
-})
-
-app.get('/api/players/:id', (req, res, next) => {
-	const {id} = req.params
-	// const player = players.find(player => player.id === id)
-
-	Player.findById(id)
-		.then(player => {
-			player
-				? res.json(player)
-				: res.status(404).send({
-					error: 'id not found'
-				})
-		})
-		.catch(next)
-})
-
-app.put('/api/players/:id', (req, res, next) => {
-	const {id} = req.params
-	const player = req.body
-
-	const newNoteUpdate = {
-		name: player.name,
-		position: player.position,
-		birthday: player.birthday
-	}
-	
-	Player.findByIdAndUpdate(id, newNoteUpdate, { new: true })
-		.then( result => {
-			res.status(200).json(result)
-		})
-		.catch( next)
-})
-
-app.delete('/api/players/:id', (req, res, next) => {
-	const {id} = req.params
-	// players = players.filter(player => player.id !== id)
-
-	Player.findByIdAndDelete(id)
-		.then(() => {
-			res.status(204).end()
-		})
-		.catch(next)
-})
-
-app.post('/api/players', (req, res) => {
-	const player = req.body
-
-	if (!player || !player.name || !player.birthday || !player.position) {
-		return res.status(400).json({
-			error: 'player body missing'
-		})
-	}
-
-	const newPlayer = new Player({
-		name: player.name,
-		position: player.position,
-		birthday: player.birthday
-	})
-
-	newPlayer.save()
-		.then(savedNote => {
-			res.json(savedNote)
-		})
-
-	// players = [...players, newPlayer] // Esto es como hacer un concat para añadir registro al array
-
-	// res.status(201).json(newPlayer)
-})
-
-app.use(handleErrors)
+app.use('/api/players', playersRouter)
+app.use('/api/users', usersRouter)
 
 app.use(notFound)
+// The error handler must be registered before any other error middleware and after all controllers
+app.use(Sentry.Handlers.errorHandler())
+app.use(handleErrors)
 
 const PORT = process.env.PORT
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
 	console.log('Server running on port ' + PORT)
 })
+
+module.exports = { app, server }

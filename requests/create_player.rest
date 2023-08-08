@@ -2,9 +2,10 @@ POST http://localhost:3001/api/players
 Content-Type: application/json
 
 {
-    "name": "Test",
-    "position": "Test",
-    "birthday": "1992-04-22"
+    "name": "Test5",
+    "position": "Test5",
+    "birthday": "1992-04-22",
+    "userId": "64d27dd98c3f64002f0cc4ea"
 }
 
 ###
